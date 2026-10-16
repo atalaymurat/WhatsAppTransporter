@@ -13,7 +13,7 @@ if not exist "%VENV_PY%" (
     if errorlevel 1 goto setup_error
 )
 
-"%VENV_PY%" -c "import flask, playwright" >nul 2>nul
+"%VENV_PY%" -c "import flask, playwright, waitress" >nul 2>nul
 if errorlevel 1 (
     echo Gerekli Python paketleri kuruluyor. Internet baglantisi gerekebilir...
     "%VENV_PY%" -m pip install -r "%~dp0requirements.txt"

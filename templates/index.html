@@ -1,0 +1,761 @@
+<!doctype html>
+<html lang="tr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WhatsAppTransporter</title>
+ <style>
+ :root{font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;color:#172033;background:#f4f6fb;font-synthesis:none}
+ *{box-sizing:border-box}
+ body{margin:0;background:linear-gradient(135deg,#f4f6fb 0%,#edf2f8 100%);color:#172033}
+ .wrap{max-width:1240px;margin:0 auto;padding:28px 24px 56px}
+ h1{font-size:25px;letter-spacing:-.04em;margin:0} h2{font-size:17px;letter-spacing:-.02em;margin-top:0}
+ .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;background:linear-gradient(120deg,#111c36,#203b63);color:#fff;border-radius:18px;padding:23px 26px;margin-bottom:18px;box-shadow:0 12px 28px #13294b22}
+ .topbar p{margin:5px 0 0;color:#c6d2e5;font-size:13px}
+ .stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:18px}
+ .stat{background:#fff;border:1px solid #e6eaf1;border-radius:14px;padding:15px 17px;box-shadow:0 4px 14px #21334d08}
+ .stat-label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#738099;font-weight:700}
+ .stat-value{display:block;font-size:25px;letter-spacing:-.04em;font-weight:750;margin-top:5px;color:#172033}
+ .card{background:#fff;border:1px solid #e6eaf1;border-radius:15px;padding:20px;margin-bottom:16px;box-shadow:0 5px 18px #21334d08}
+ label{display:block;font-size:13px;margin:10px 0 4px;color:#444}
+  input,textarea,select{width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid #d9dfeb;border-radius:9px;font:inherit;background:#fff;color:#172033;transition:border-color .15s,box-shadow .15s}
+ input:focus,textarea:focus,select:focus{outline:none;border-color:#5683d5;box-shadow:0 0 0 3px #5683d522}
+ textarea{min-height:90px}
+ .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+ button{background:#2563eb;color:#fff;border:0;padding:10px 18px;border-radius:9px;font:inherit;font-weight:650;cursor:pointer;margin-top:14px;transition:transform .15s,filter .15s}
+ button:hover{filter:brightness(.96);transform:translateY(-1px)}
+ button.del{background:#dc2626;padding:5px 10px;margin:0}
+ button.pause{background:#d97706;padding:5px 10px;margin:0 4px 0 0}
+ button.sm{padding:4px 9px;margin:0 4px 4px 0;font-size:12px}
+ button.gray{background:#6b7280}
+ button.red{background:#dc2626}
+ button.tab{background:#e5e7eb;color:#111;padding:6px 12px;margin:0 6px 6px 0}
+ button.tab.on{background:#111;color:#fff}
+ table{width:100%;border-collapse:collapse;font-size:13px}
+ th,td{text-align:left;padding:11px 10px;border-bottom:1px solid #edf0f5;vertical-align:top}
+ th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#78849a;background:#f8f9fc}
+ .st{padding:8px 12px;border-radius:999px;background:#fff0c2;color:#855b00;display:inline-block;font-size:13px;font-weight:700}
+ .st.ok{background:#d9f7e7;color:#147442}
+ pre{background:#111c36;color:#b9d8ff;padding:14px;border-radius:10px;max-height:280px;overflow:auto;font-size:12px;line-height:1.6}
+ small{color:#666}
+  .note{color:#b45309;font-size:12px;display:block}
+  .msgcell{width:220px;max-width:220px;white-space:normal;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+  .history-main{cursor:pointer}
+  .history-name{max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .history-detail-row td{background:#f9fafb;padding:12px}
+  .history-detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+  .history-detail-item{min-width:0}
+  .history-detail-label{display:block;color:#6b7280;font-size:11px;margin-bottom:3px}
+  .history-detail-value{white-space:pre-wrap;overflow-wrap:anywhere}
+  .countdown{display:block;color:#b45309;font-size:12px;font-weight:600;margin-top:3px}
+ .daily-chart-scroll{overflow-x:auto}
+ .daily-bars{display:grid;grid-template-columns:repeat(14,minmax(38px,1fr));gap:9px;min-width:650px;padding:10px 2px 0}
+ .daily-bar-item{display:flex;flex-direction:column;align-items:center;gap:5px;font-size:11px;color:#69758a}
+ .daily-bar-track{height:150px;width:100%;display:flex;align-items:flex-end;justify-content:center;border-bottom:1px solid #dfe5ef;background:linear-gradient(to top,#f7f9fc 1px,transparent 1px);background-size:100% 25%}
+ .daily-bar-fill{width:min(28px,75%);min-height:0;background:linear-gradient(180deg,#5683d5,#2563eb);border-radius:5px 5px 0 0;transition:height .2s}
+ .daily-bar-count{font-weight:700;color:#334155}
+ .daily-bar-label{white-space:nowrap}
+  dialog{width:min(640px,calc(100% - 32px));border:0;border-radius:12px;padding:0;box-shadow:0 20px 60px #0004}
+  dialog::backdrop{background:#1118}
+  .dialog-body{padding:20px}
+  .dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+ .main-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 16px}
+ .main-tabs button{margin:0;background:#e5e7eb;color:#263247}
+ .main-tabs button.active{background:#203b63;color:#fff}
+ .history-main:hover td{background:#f7f9fd}
+ .history-main[aria-expanded="true"] td{background:#eef4ff}
+ @media(max-width:760px){.wrap{padding:14px 12px 36px}.topbar{align-items:flex-start;flex-direction:column;padding:19px}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.card{padding:15px;overflow-x:auto}.topbar h1{font-size:22px}}
+</style></head><body><div class="wrap">
+<header class="topbar"><div><h1>WhatsAppTransporter</h1><p>Mesaj kampanyalarini, listeleri ve gonderim sonuclarini yonet</p></div><span id="status" class="st">...</span></header>
+<nav class="main-tabs" aria-label="Ana bolumler">
+ <button type="button" data-tab-button="dashboard" onclick="switchTab('dashboard')">Ana Panel</button>
+ <button type="button" data-tab-button="send" onclick="switchTab('send')">Mesaj Gonder</button>
+ <button type="button" data-tab-button="templates" onclick="switchTab('templates')">Sablonlar</button>
+ <button type="button" data-tab-button="contacts" onclick="switchTab('contacts')">Kisiler</button>
+</nav>
+<div data-tab-page="dashboard">
+<section class="stats" aria-label="Genel durum">
+ <div class="stat"><span class="stat-label">Aktif liste</span><strong class="stat-value" id="stat_jobs">0</strong></div>
+ <div class="stat"><span class="stat-label">Toplam alici</span><strong class="stat-value" id="stat_recipients">0</strong></div>
+ <div class="stat"><span class="stat-label">Gonderildi</span><strong class="stat-value" id="stat_sent">0</strong></div>
+ <div class="stat"><span class="stat-label">Kontrol gereken</span><strong class="stat-value" id="stat_attention">0</strong></div>
+ <div class="stat"><span class="stat-label">Kayitli kisi</span><strong class="stat-value" id="stat_contacts">0</strong></div>
+</section>
+<div class="card"><h2>Gunluk mesaj gonderimi</h2>
+ <small>Son 14 gun · basarili gonderim alan benzersiz kisi sayisi</small>
+ <div class="daily-chart-scroll"><div id="daily_chart" class="daily-bars" role="img" aria-label="Gunlere gore basarili mesaj gonderilen kisi sayisi"></div></div>
+</div>
+</div>
+
+<div data-tab-page="templates">
+<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h2 style="margin:0">Mesaj sablonlari</h2><div><button class="sm" onclick="newTemplate()">Yeni sablon ekle</button> <button class="sm gray" onclick="loadSavedMessages()">Yenile</button></div></div>
+ <small>Buraya kaydettigin sablonlar secim listelerinde gorunur. Gonderilen alicilari ve gecmisi buradan inceleyebilirsin.</small>
+ <div id="templates_list" style="margin-top:10px"></div>
+ <div id="template_recipients" style="display:none;margin-top:12px"></div>
+ <dialog id="template_editor">
+  <form id="template_editor_form" class="dialog-body">
+   <h2 id="template_editor_title" style="margin:0 0 12px">Sablon</h2>
+   <label for="template_edit_name">Şablon adı</label><input id="template_edit_name" required maxlength="120">
+   <label for="template_edit_message">Mesaj</label><textarea id="template_edit_message" required style="min-height:180px"></textarea>
+   <label for="template_edit_image_file">Sablon resmi (istege bagli)</label>
+   <input id="template_edit_image_file" type="file" accept="image/*" onchange="uploadTemplateImage(this)">
+   <div id="template_edit_image_preview"></div>
+   <div id="template_edit_error" class="note"></div>
+   <div class="dialog-actions"><button type="button" class="sm gray" onclick="document.getElementById('template_editor').close()">Kapat</button><button id="template_edit_save" type="submit" class="sm">Kaydet</button></div>
+  </form>
+ </dialog>
+</div>
+</div>
+
+<div data-tab-page="send">
+<div class="card"><h2>CSV listesi yukle (otomatik, yavas yavas)</h2>
+  <label>CSV dosyasi <small>(Google Contacts veya telefon, isim, mesaj sutunlari. Ayni numaraya ayni mesaj tekrar gonderilmez; farkli mesaj gonderilebilir.)</small></label>
+ <input id="csv_file" type="file" accept=".csv,.txt" onchange="previewCsv()">
+ <div id="csv_preview" style="display:none;margin:10px 0"></div>
+ <label>Liste adi (istege bagli)</label><input id="csv_name">
+  <label>Sablondan sec</label><div class="row"><select id="csv_saved" onchange="useSavedMessage('csv')"><option value="">Yeni mesaj</option></select><button class="sm gray" onclick="saveCurrentMessage('csv')">Sablon olarak kaydet</button></div>
+ <label>Mesaj <small>({isim} yazarsan kisinin adi gelir; CSV'de mesaj sutunu varsa o satir icin o kullanilir)</small></label>
+ <textarea id="csv_message" placeholder="Merhaba {isim}, ..."></textarea>
+ <div style="margin:6px 0"><small>Resim eklemek icin mesaj kutusuna resmi yapistir (Ctrl+V) ya da sec. Mesaj yazisi resmin alt yazisi olarak gider:</small>
+  <input type="file" accept="image/*" style="width:auto" onchange="pickImage('csv',this)">
+  <div id="csv_img_prev"></div></div>
+ <div class="row">
+  <div><label>Gunluk limit (mesaj/gun)</label><input id="csv_limit" type="number" min="1" value="200"></div>
+  <div><label>Gonderim baslangic saati</label><input id="csv_ws" type="number" min="0" max="23" value="9"></div>
+  <div><label>Gonderim bitis saati</label><input id="csv_we" type="number" min="1" max="24" value="21"></div>
+  <div><label>Baslangic zamani <small>(bos = hemen)</small></label><input id="csv_start" type="datetime-local"></div>
+ </div>
+ <label><input type="checkbox" id="csv_spread" style="width:auto"> Mesajlari saat araligina esit yay</label>
+ <div class="row">
+  <div><label>Yayma kapaliysa: min bekleme (sn)</label><input id="csv_min" type="number" min="3" value="60"></div>
+  <div><label>Yayma kapaliysa: max bekleme (sn)</label><input id="csv_max" type="number" min="3" value="120"></div>
+ </div>
+ <button onclick="addCsv()">Listeyi ekle ve baslat</button>
+ <div id="csv_msg" style="margin-top:8px"></div>
+</div>
+</div>
+
+<div data-tab-page="dashboard">
+<div class="card"><h2>Gorevler</h2>
+ <table><thead><tr><th>Ad</th><th>Kisi</th><th>Durum</th><th>Sonraki</th><th>Ilerleme</th><th>Sonuc</th><th></th></tr></thead>
+ <tbody id="jobs"></tbody></table>
+</div>
+
+<div class="card"><h2>Uygulama ve gonderim loglari</h2>
+ <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+  <input id="log_q" placeholder="Tarih, olay, gorev, telefon veya hata ara" oninput="loadLogs()">
+  <button class="sm gray" style="white-space:nowrap" onclick="exportLogs()">Loglari CSV indir</button>
+ </div>
+ <small id="log_count"></small><pre id="log"></pre>
+</div>
+
+<div class="card"><h2>Gonderim gecmisi</h2>
+ <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+  <input id="history_q" placeholder="Telefon, isim, mesaj veya gorev ara" oninput="loadHistory()">
+  <button class="sm gray" style="white-space:nowrap" onclick="location.href='/api/history/export'">Gecmisi CSV indir</button>
+ </div>
+ <small id="history_count"></small>
+ <div style="overflow-x:auto"><table><thead><tr><th>Tarih</th><th>Telefon</th><th>Isim</th><th>Sonuc / Detay</th></tr></thead>
+ <tbody id="history_rows"></tbody></table></div>
+</div>
+</div>
+
+<div data-tab-page="contacts">
+<div class="card"><h2>Kisiler ve mesaj izinleri</h2>
+ <small>Kesin basarili gonderim alan numaralar burada tutulur. Her kisinin mesaj ID gecmisi korunur. Mesaj almak istemeyenleri isaretle; bu isaret yeni CSV'lerde ve siradaki gonderimlerde engel olur.</small>
+ <div class="row" style="align-items:end;margin-top:8px">
+  <div><label>Mesaj istemiyor olarak ekle</label><input id="contact_new_phone" placeholder="Telefon numarasi"></div>
+  <div><label>Isim (istege bagli)</label><input id="contact_new_name" placeholder="Isim"></div>
+  <div><button class="sm" onclick="addOptOutContact()">Engelleme listesine ekle</button></div>
+ </div>
+ <div style="display:flex;gap:8px;align-items:center;margin:10px 0">
+  <input id="contact_q" placeholder="Telefon veya isim ara" oninput="loadContacts()">
+  <button class="sm gray" onclick="loadContacts()">Yenile</button>
+  <button class="sm gray" style="white-space:nowrap" onclick="location.href='/api/contacts/export'">Kisi listesini CSV indir</button>
+ </div>
+ <small id="contact_count"></small>
+ <div style="overflow-x:auto"><table><thead><tr><th>Telefon</th><th>Isim</th><th>Basarili mesaj</th><th>Son basarili gonderim</th><th>Durum / islem</th></tr></thead>
+ <tbody id="contact_rows"></tbody></table></div>
+ <div id="contact_messages" style="margin-top:8px"></div>
+</div>
+</div>
+
+<div data-tab-page="dashboard">
+<div class="card" id="detail" style="display:none">
+ <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+  <h2 id="d_title" style="margin:0"></h2>
+  <button class="sm gray" style="margin:0" onclick="closeDetail()">Kapat</button>
+ </div>
+ <div style="margin:12px 0 4px">
+  <button class="sm" id="d_retry" onclick="retryAll()">Hatalilari tekrar dene</button>
+  <button class="sm gray" onclick="dl('sorunlu')">Gecersiz/hatali numaralari indir</button>
+  <button class="sm gray" onclick="dl('atlanan')">Atlanan satirlari indir</button>
+  <button class="sm gray" onclick="dl('all')">Tum listeyi indir</button>
+ </div>
+ <div style="margin:0 0 8px">
+  <button class="sm" onclick="dl('google_tum')">Google Kisiler formatinda indir: guncel liste</button>
+  <button class="sm" onclick="dl('google_sorunlu')">Google Kisiler formatinda indir: sadece duzeltilecekler</button>
+  <small style="display:block;margin-top:2px">Duzeltilen numaralar +90... biciminde yazilir. Sorunlu kisiler Labels sutununda su etiketlerle isaretlenir: WA Gecersiz Numara, WA Gonderim Hatasi, WA Numara Duzeltildi, WA Tekrar Kisi.</small>
+ </div>
+ <div id="d_append" style="margin:8px 0">
+   <label>Listeye yeni kisi ekle <small>(listede ayni numara + ayni mesaj olanlar atlanir; farkli mesajlar eklenebilir)</small></label>
+  <input id="d_file" type="file" accept=".csv,.txt" style="width:auto">
+  <button class="sm" onclick="appendCsv()">Yeni kisileri ekle</button>
+  <div id="d_msg" style="margin-top:6px"></div>
+ </div>
+ <div id="d_tabs" style="margin-top:10px"></div>
+ <input id="d_q" placeholder="Ara: isim veya numara" oninput="q=this.value;shown=100;renderDetail()" style="margin:6px 0 10px">
+ <table><thead><tr id="d_head"></tr></thead><tbody id="d_body"></tbody></table>
+</div>
+
+</div>
+</div>
+<script>
+let openJob=null,D=null,flt='all',q='',shown=100,activeTab='dashboard';
+const ST={bekliyor:'Bekliyor',gonderildi:'Gonderildi',gecersiz:'Gecersiz numara',hata:'Hata',daha_once_gonderildi:'Daha once gonderildi',mesaj_istemiyor:'Mesaj istemiyor'};
+const COL={gonderildi:'#16a34a',gecersiz:'#dc2626',hata:'#dc2626',bekliyor:'#6b7280',daha_once_gonderildi:'#b45309',mesaj_istemiyor:'#dc2626'};
+function cell(tr,text){const td=document.createElement('td');td.textContent=text;tr.appendChild(td);return td}
+function mkbtn(label,cls,fn){const b=document.createElement('button');b.textContent=label;b.className='sm '+cls;b.onclick=fn;return b}
+function switchTab(name){
+ const allowed=['dashboard','send','templates','contacts'];
+ if(!allowed.includes(name))name='dashboard';
+ activeTab=name;
+ document.querySelectorAll('[data-tab-page]').forEach(page=>{page.hidden=page.dataset.tabPage!==name});
+ document.querySelectorAll('[data-tab-button]').forEach(button=>{
+  const active=button.dataset.tabButton===name;button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));
+ });
+ try{localStorage.setItem('wa_active_tab',name)}catch(e){}
+ if(name==='templates')loadSavedMessages();
+ if(name==='contacts')loadContacts();
+ if(name==='dashboard'){loadDashboardSummary();load()}
+ else loadStatus();
+}
+async function loadDashboardSummary(){
+ try{
+  const response=await fetch('/api/dashboard/summary'),data=await response.json();
+  document.getElementById('stat_contacts').textContent=String(data.contact_count||0);
+  const chart=document.getElementById('daily_chart');chart.innerHTML='';
+  const days=data.daily_sent||[],max=Math.max(1,...days.map(day=>Number(day.count)||0));
+  days.forEach(day=>{
+   const count=Number(day.count)||0,item=document.createElement('div');item.className='daily-bar-item';
+   item.title=day.date+': '+count+' kisi';
+   const value=document.createElement('span');value.className='daily-bar-count';value.textContent=String(count);
+   const track=document.createElement('div');track.className='daily-bar-track';
+   const bar=document.createElement('div');bar.className='daily-bar-fill';bar.style.height=count?Math.max(4,Math.round(count/max*100))+'%':'0%';track.appendChild(bar);
+   const label=document.createElement('span');label.className='daily-bar-label';label.textContent=day.label;
+   item.append(value,track,label);chart.appendChild(item);
+  });
+ }catch(e){}
+}
+function tickCountdowns(){
+ const now=Date.now();
+ document.querySelectorAll('.countdown[data-target]').forEach(el=>{
+  const seconds=Math.max(0,Math.ceil((Number(el.dataset.target)-now)/1000));
+  if(!seconds){el.textContent='Siradaki mesaj hazirlaniyor...';return}
+  const h=Math.floor(seconds/3600),m=Math.floor((seconds%3600)/60),s=seconds%60;
+  el.textContent='Sonraki mesaja kalan: '+(h?String(h).padStart(2,'0')+':':'')+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+ });
+}
+async function post(url,body){const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})});const j=await r.json();return {ok:r.ok,j:j}}
+
+async function loadStatus(){
+ try{
+  const s=await (await fetch('/api/status')).json();
+  const st=document.getElementById('status');st.textContent=s.status;
+  st.className='st'+(s.status.startsWith('Hazir')||s.status.startsWith('Gonderiliyor')?' ok':'');
+ }catch(e){}
+}
+
+async function load(){
+ try{
+  const s=await (await fetch('/api/state')).json();
+  const st=document.getElementById('status');
+  st.textContent=s.status; st.className='st'+(s.status.startsWith('Hazir')||s.status.startsWith('Gonderiliyor')?' ok':'');
+  const activeJobs=s.jobs.filter(j=>j.status!=='tamamlandi').length;
+  const recipients=s.jobs.reduce((n,j)=>n+(Number(j.n_recipients)||0),0);
+  const sent=s.jobs.reduce((n,j)=>n+(j.counts?Number(j.counts.gonderildi||0):Number(j.sent||0)),0);
+  const attention=s.jobs.reduce((n,j)=>n+(j.counts?Number(j.counts.hata||0)+Number(j.counts.gecersiz||0):Number(j.failed||0)),0);
+  document.getElementById('stat_jobs').textContent=activeJobs;
+  document.getElementById('stat_recipients').textContent=recipients;
+  document.getElementById('stat_sent').textContent=sent;
+  document.getElementById('stat_attention').textContent=attention;
+  const tb=document.getElementById('jobs'); tb.innerHTML='';
+  s.jobs.forEach(j=>{
+   const tr=document.createElement('tr');
+   const nameCell=cell(tr,j.name+(j.image?' [resimli]':''));
+   if(j.type==='liste'&&j.status==='bekliyor'&&j.next_run){
+    const countdown=document.createElement('small');countdown.className='countdown';
+    countdown.dataset.target=String(new Date(j.next_run).getTime());nameCell.appendChild(countdown);
+   }
+   cell(tr,j.n_recipients);
+   const sc=cell(tr,j.status);
+   if(j.note){const n=document.createElement('span');n.className='note';n.textContent=j.note;sc.appendChild(n)}
+   if(j.resume_notice){const n=document.createElement('span');n.className='note';n.textContent=j.resume_notice;sc.appendChild(n)}
+   cell(tr,j.next_run?j.next_run.replace('T',' '):'-');
+   const progressCell=cell(tr,j.progress);
+   if(j.type==='liste'){
+    const checkpoint=[];
+    if(j.last_processed){const p=j.last_processed;checkpoint.push('Son islenen: satir '+(p.row||'-')+', '+(p.phone||'')+' ('+({ok:'gonderildi',belirsiz:'belirsiz',hata:'hata',gecersiz:'gecersiz',daha_once_gonderildi:'daha once gonderilmis'}[p.status]||p.status||'')+')')}
+    const next=j.current_recipient||j.next_recipient;
+    if(next)checkpoint.push((j.current_recipient?'Isleniyor: ':'Siradaki: ')+'satir '+(next.row||'-')+', '+(next.phone||''));
+    if(checkpoint.length){const detail=document.createElement('small');detail.className='note';detail.textContent=checkpoint.join(' | ');progressCell.appendChild(document.createElement('br'));progressCell.appendChild(detail)}
+   }
+   let res=j.sent+(j.failed?(' (hata: '+j.failed+')'):'');
+    if(j.counts){const c=j.counts;res=c.gonderildi+' gonderildi';if(c.gecersiz)res+=', '+c.gecersiz+' gecersiz';if(c.hata)res+=', '+c.hata+' hata';if(c.daha_once_gonderildi)res+=', '+c.daha_once_gonderildi+' daha once gonderilmis';if(c.mesaj_istemiyor)res+=', '+c.mesaj_istemiyor+' mesaj istemiyor'}
+   if(j.n_skipped)res+=', '+j.n_skipped+' atlanan';
+   cell(tr,res);
+   const td=document.createElement('td');
+   td.appendChild(mkbtn('Detay','gray',()=>openDetail(j.id)));
+   if(j.status!=='tamamlandi'){
+    const p=document.createElement('button');p.className='pause';
+    p.textContent=j.status==='duraklatildi'?'Devam':'Duraklat';
+    p.onclick=async()=>{await fetch('/api/jobs/'+j.id+'/toggle',{method:'POST'});load()};
+    td.appendChild(p);
+   }
+   const b=document.createElement('button');
+   b.textContent='Sil'; b.className='del'; b.onclick=async()=>{if(confirm('Bu gorev silinsin mi?')){await fetch('/api/jobs/'+j.id,{method:'DELETE'});if(openJob===j.id)closeDetail();load()}};
+   td.appendChild(b); tr.appendChild(td); tb.appendChild(tr);
+  });
+  tickCountdowns();
+  if(activeTab==='dashboard'){loadLogs();loadHistory()}
+  if(openJob)loadDetail();
+ }catch(e){}
+}
+
+async function loadLogs(){
+ try{
+  const q=document.getElementById('log_q').value;
+  const d=await (await fetch('/api/logs?limit=250&q='+encodeURIComponent(q))).json();
+  document.getElementById('log_count').textContent=d.total+' kayit (son 250 gosteriliyor)';
+  const lg=document.getElementById('log');
+  const labels={job_started:'Gorev basladi',job_queued:'Gorev siraya alindi',job_wait:'Bekleme / planlama',job_control:'Gorev kontrolu',job_deleted:'Gorev silindi',job_retry:'Tekrar siralama',csv_import:'CSV yukleme',csv_append:'CSV ekleme',recipient_selected:'Alici secildi',recipient_skipped:'Alici atlandi',recipient_updated:'Alici duzenlendi',send_step:'Gonderim adimi',send_result:'Gonderim sonucu',send_uncertain:'Belirsiz sonuc',whatsapp_start:'WhatsApp baslatma',whatsapp_connect:'WhatsApp baglanti',whatsapp_login:'WhatsApp giris',whatsapp_reconnect:'WhatsApp yeniden baglanti',worker_error:'Uygulama hatasi',contact_opt_out:'Mesaj izni'};
+  lg.textContent=d.items.slice().reverse().map(x=>`${x.created_at} [${x.level}] ${labels[x.event]||x.event}${x.job_id?' gorev='+x.job_id:''}${x.phone?' tel='+x.phone:''} ${x.message}`).join('\\n');
+  lg.scrollTop=lg.scrollHeight;
+ }catch(e){}
+}
+function exportLogs(){
+ const q=document.getElementById('log_q').value;
+ location.href='/api/logs/export?q='+encodeURIComponent(q);
+}
+
+async function loadHistory(){
+ try{
+  const q=document.getElementById('history_q').value;
+  const d=await (await fetch('/api/history?limit=20&q='+encodeURIComponent(q))).json();
+  document.getElementById('history_count').textContent='Toplam '+d.total+' kayit · son 20 gosteriliyor';
+  const body=document.getElementById('history_rows');
+  const previousOpen=body.querySelector('.history-main[aria-expanded="true"]');
+  const openHistoryId=previousOpen?previousOpen.dataset.historyId:'';
+  body.innerHTML='';
+  d.items.forEach(h=>{
+   const tr=document.createElement('tr');
+   tr.className='history-main';tr.tabIndex=0;tr.dataset.historyId=String(h.id||'');tr.setAttribute('aria-expanded','false');
+   cell(tr,(h.sent_at||'').replace('T',' '));cell(tr,h.phone||'');
+   const person=cell(tr,h.name||'');person.className='history-name';person.title=h.name||'';
+   const result={ok:'Gonderildi',belirsiz:'Belirsiz',hata:'Hata',gecersiz:'Gecersiz'}[h.result]||h.result||'';
+   const status=cell(tr,result+'  +');
+   if(h.result==='ok')status.style.color='#16a34a';else status.style.color='#b45309';
+   const detailRow=document.createElement('tr');detailRow.className='history-detail-row';detailRow.hidden=true;
+   const detailCell=document.createElement('td');detailCell.colSpan=4;
+   const grid=document.createElement('div');grid.className='history-detail-grid';
+   for(const [label,value] of [['Mesaj',h.message],['Gorev',h.job_name],['Mesaj ID',h.message_id],['Aciklama',h.error]]){
+    if(!value)continue;
+    const item=document.createElement('div');item.className='history-detail-item';
+    const caption=document.createElement('span');caption.className='history-detail-label';caption.textContent=label;
+    const content=document.createElement('div');content.className='history-detail-value';content.textContent=value;
+    item.append(caption,content);grid.appendChild(item);
+   }
+   detailCell.appendChild(grid);detailRow.appendChild(detailCell);
+   const toggle=()=>{
+    const willOpen=detailRow.hidden;
+    body.querySelectorAll('.history-detail-row').forEach(row=>row.hidden=true);
+    body.querySelectorAll('.history-main').forEach(row=>row.setAttribute('aria-expanded','false'));
+    detailRow.hidden=!willOpen;tr.setAttribute('aria-expanded',String(willOpen));
+    status.textContent=result+(willOpen?'  -':'  +');
+   };
+   tr.addEventListener('click',toggle);
+   tr.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();toggle()}});
+   body.append(tr,detailRow);
+   if(openHistoryId && openHistoryId===tr.dataset.historyId){
+    detailRow.hidden=false;tr.setAttribute('aria-expanded','true');status.textContent=result+'  -';
+   }
+  });
+  if(!d.items.length){const tr=document.createElement('tr');const td=cell(tr,'Gonderim gecmisi bos.');td.colSpan=4;body.appendChild(tr)}
+ }catch(e){}
+}
+
+async function loadContacts(){
+ try{
+  const q=document.getElementById('contact_q').value;
+  const d=await (await fetch('/api/contacts?limit=500&q='+encodeURIComponent(q))).json();
+  document.getElementById('contact_count').textContent='Toplam '+d.total+' kisi (en fazla 500 gosteriliyor)';
+  const body=document.getElementById('contact_rows');body.innerHTML='';
+  d.items.forEach(c=>{
+   const tr=document.createElement('tr');cell(tr,c.phone);
+   cell(tr,c.name||'');cell(tr,String(c.message_count||0));cell(tr,(c.last_sent_at||'-').replace('T',' '));
+   const actions=document.createElement('td');
+   const status=document.createElement('span');status.textContent=c.opt_out?'Mesaj istemiyor':'Izinli';status.style.color=c.opt_out?'#dc2626':'#15803d';actions.appendChild(status);actions.appendChild(document.createElement('br'));
+   actions.appendChild(mkbtn(c.opt_out?'Engeli kaldir':'Mesaj istemiyor',c.opt_out?'gray':'red',async()=>{
+    if(!c.opt_out&&!confirm(c.phone+' icin yeni mesajlari engelle?'))return;
+    const out=await fetch('/api/contacts/'+encodeURIComponent(c.phone),{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({opt_out:!c.opt_out})});
+    const result=await out.json();if(!out.ok){alert(result.error||'Islem tamamlanamadi');return}loadContacts();
+   }));
+   actions.appendChild(mkbtn('Mesaj ID gecmisi','gray',()=>showContactMessages(c.phone)));
+   tr.appendChild(actions);body.appendChild(tr);
+  });
+  if(!d.items.length){const tr=document.createElement('tr');const td=cell(tr,'Kayitli kisi yok.');td.colSpan=5;body.appendChild(tr)}
+ }catch(e){}
+}
+async function addOptOutContact(){
+ const phone=document.getElementById('contact_new_phone').value.trim();
+ const name=document.getElementById('contact_new_name').value.trim();
+ const out=await post('/api/contacts',{phone:phone,name:name});
+ if(!out.ok){alert(out.j.error||'Kisi eklenemedi');return}
+ document.getElementById('contact_new_phone').value='';document.getElementById('contact_new_name').value='';
+ loadContacts();
+}
+async function showContactMessages(phone){
+ const box=document.getElementById('contact_messages');box.textContent='Yukleniyor...';
+ const data=await (await fetch('/api/contacts/'+encodeURIComponent(phone)+'/messages')).json();
+ box.innerHTML='';
+ const heading=document.createElement('strong');heading.textContent=phone+' mesaj gecmisi';box.appendChild(heading);
+ if(!data.items||!data.items.length){const p=document.createElement('p');p.textContent='Bu kisi icin gonderim denemesi bulunmuyor.';box.appendChild(p);return}
+ const table=document.createElement('table'),thead=document.createElement('thead'),head=document.createElement('tr');
+ ['Tarih','Mesaj ID','Gorev','Sonuc','Mesaj'].forEach(x=>{const th=document.createElement('th');th.textContent=x;head.appendChild(th)});thead.appendChild(head);table.appendChild(thead);
+ const tbody=document.createElement('tbody');
+ data.items.forEach(item=>{const tr=document.createElement('tr');
+  [String(item.sent_at||'').replace('T',' '),item.message_id||'',item.job_name||'',({ok:'Basarili',belirsiz:'Belirsiz',hata:'Hata',gecersiz:'Gecersiz'}[item.result]||item.result||''),item.message||''].forEach(v=>cell(tr,v));tbody.appendChild(tr)
+ });table.appendChild(tbody);box.appendChild(table);
+}
+
+async function openDetail(id){
+ openJob=id;flt='all';q='';shown=100;
+ document.getElementById('d_q').value='';
+ document.getElementById('d_msg').textContent='';
+ document.getElementById('detail').style.display='block';
+ await loadDetail();
+ document.getElementById('detail').scrollIntoView({behavior:'smooth'});
+}
+function closeDetail(){openJob=null;D=null;document.getElementById('detail').style.display='none'}
+async function loadDetail(){
+ if(!openJob)return;
+ const r=await fetch('/api/jobs/'+openJob+'/recipients');
+ if(!r.ok){closeDetail();return}
+ D=await r.json();
+ renderDetail();
+}
+function setHead(cols){const h=document.getElementById('d_head');h.innerHTML='';cols.forEach(c=>{const th=document.createElement('th');th.textContent=c;h.appendChild(th)})}
+function more(n,body,span){
+ if(n>shown){
+  const tr=document.createElement('tr');const td=document.createElement('td');td.colSpan=span;
+  td.appendChild(mkbtn('Daha fazla goster ('+(n-shown)+' kayit daha)','gray',()=>{shown+=200;renderDetail()}));
+  tr.appendChild(td);body.appendChild(tr);
+ }
+}
+function renderDetail(){
+ if(!D)return;
+ const isList=D.type==='liste';
+ document.getElementById('d_title').textContent=D.name+' - liste detayi';
+ document.getElementById('d_append').style.display=isList?'block':'none';
+ document.getElementById('d_retry').style.display=isList?'inline-block':'none';
+ const rec=D.recipients, sk=D.skipped||[];
+  const c={all:rec.length,bekliyor:0,gonderildi:0,gecersiz:0,hata:0,daha_once_gonderildi:0,mesaj_istemiyor:0,atlanan:sk.length};
+ rec.forEach(r=>{if(c[r.status]!==undefined)c[r.status]++});
+  const tabs=[['all','Tumu'],['bekliyor','Bekliyor'],['gonderildi','Gonderildi'],['daha_once_gonderildi','Daha once gonderildi'],['mesaj_istemiyor','Mesaj istemiyor'],['gecersiz','Gecersiz numara'],['hata','Hata'],['atlanan','Atlanan satirlar']];
+ const tb=document.getElementById('d_tabs'); tb.innerHTML='';
+ tabs.forEach(t=>{
+  const b=document.createElement('button');b.className='tab'+(flt===t[0]?' on':'');
+  b.textContent=t[1]+' ('+c[t[0]]+')';
+  b.onclick=()=>{flt=t[0];shown=100;renderDetail()};
+  tb.appendChild(b);
+ });
+ const body=document.getElementById('d_body'); body.innerHTML='';
+ const needle=q.trim().toLowerCase();
+ if(flt==='atlanan'){
+  setHead(['Satir','Isim','Girilen deger','Neden']);
+  const rows=sk.filter(s=>!needle||((s.name||'')+' '+(s.raw||'')).toLowerCase().includes(needle));
+  rows.slice(0,shown).forEach(s=>{const tr=document.createElement('tr');cell(tr,s.row);cell(tr,s.name);cell(tr,s.raw);cell(tr,s.reason);body.appendChild(tr)});
+  if(!rows.length){const tr=document.createElement('tr');const td=cell(tr,'Atlanan satir yok.');td.colSpan=4;body.appendChild(tr)}
+  more(rows.length,body,4);
+  return;
+ }
+ setHead(['Telefon','Isim','Durum','Aciklama','Zaman','']);
+ const rows=rec.filter(r=>(flt==='all'||r.status===flt)&&(!needle||(r.phone+' '+(r.name||'')).toLowerCase().includes(needle)));
+ rows.slice(0,shown).forEach(r=>{
+  const tr=document.createElement('tr');
+  cell(tr,r.phone);cell(tr,r.name);
+  const sc=cell(tr,ST[r.status]||r.status);sc.style.color=COL[r.status]||'#111';
+  cell(tr,r.error||'');
+  cell(tr,r.time?r.time.replace('T',' '):'');
+  const td=document.createElement('td');
+  if(isList){
+    td.appendChild(mkbtn('Duzelt','gray',()=>editRec(r.phone,r.message_id)));
+    if(r.status==='hata')td.appendChild(mkbtn('Tekrar dene','',()=>retryRec(r.phone,r.message_id)));
+    td.appendChild(mkbtn('Sil','red',()=>delRec(r.phone,r.message_id)));
+  }
+  tr.appendChild(td);body.appendChild(tr);
+ });
+ if(!rows.length){const tr=document.createElement('tr');const td=cell(tr,'Bu filtrede kayit yok.');td.colSpan=6;body.appendChild(tr)}
+ more(rows.length,body,6);
+}
+function afterChange(){loadDetail();load()}
+async function retryRec(phone,message_id){await post('/api/jobs/'+openJob+'/retry',{phone:phone,message_id:message_id});afterChange()}
+async function retryAll(){const x=await post('/api/jobs/'+openJob+'/retry',{});alert(x.ok?(x.j.n+' kisi yeniden siraya alindi.'):x.j.error);afterChange()}
+async function editRec(phone,message_id){
+ const v=prompt('Yeni numara (ulke koduyla, ornek 905551234567):',phone);
+ if(!v||v===phone)return;
+  const x=await post('/api/jobs/'+openJob+'/recipient/edit',{phone:phone,message_id:message_id,new_phone:v});
+ if(!x.ok)alert(x.j.error);
+ afterChange();
+}
+async function delRec(phone,message_id){if(!confirm(phone+' listeden silinsin mi?'))return;await post('/api/jobs/'+openJob+'/recipient/delete',{phone:phone,message_id:message_id});afterChange()}
+function dl(which){window.location='/api/jobs/'+openJob+'/export?which='+which}
+async function appendCsv(){
+ const m=document.getElementById('d_msg');
+ const f=document.getElementById('d_file').files[0];
+ if(!f){m.style.color='#dc2626';m.textContent='Once bir CSV dosyasi sec.';return}
+ const fd=new FormData();fd.append('file',f);
+ const r=await fetch('/api/jobs/'+openJob+'/append',{method:'POST',body:fd});
+ const j=await r.json();
+ m.style.color=r.ok?'#16a34a':'#dc2626';m.textContent=j.error||j.info||'';
+ if(r.ok){document.getElementById('d_file').value='';afterChange()}
+}
+
+const IMG={csv:''};
+const SELECTED_MESSAGE={csv:''};
+const SELECTED_TEMPLATE={csv:''};
+let SAVED_MESSAGES=[];
+async function loadSavedMessages(){
+ try{
+  const d=await (await fetch('/api/templates')).json();SAVED_MESSAGES=d.items||[];
+  for(const kind of ['csv']){
+   const sel=document.getElementById(kind+'_saved'),old=SELECTED_TEMPLATE[kind];
+   sel.innerHTML='<option value="">Yeni mesaj</option>';
+   SAVED_MESSAGES.forEach(m=>{
+    const o=document.createElement('option');o.value=m.id;
+    const preview=(m.message||'').replace(/\\s+/g,' ').trim();
+    const short=preview.length>48?preview.slice(0,48)+'...':preview;
+    o.textContent=(m.name||'Sablon')+' - '+short;o.title=preview;sel.appendChild(o);
+   });
+   if(SAVED_MESSAGES.some(m=>m.id===old))sel.value=old;
+  }
+  renderTemplates();
+ }catch(e){}
+}
+function renderTemplates(){
+ const root=document.getElementById('templates_list');root.innerHTML='';
+ if(!SAVED_MESSAGES.length){root.textContent='Kayitli sablon yok. Bir mesaj yazip "Sablon olarak kaydet" dugmesini kullan.';return}
+ const table=document.createElement('table');
+ const head=document.createElement('thead'),hr=document.createElement('tr');
+ ['Sablon','Gonderilen kisi','Islemler'].forEach(t=>{const th=document.createElement('th');th.textContent=t;hr.appendChild(th)});
+ head.appendChild(hr);table.appendChild(head);
+ const body=document.createElement('tbody');
+ SAVED_MESSAGES.forEach(m=>{
+  const tr=document.createElement('tr');
+  const info=document.createElement('td');info.textContent=m.name+' - '+(m.message||'').replace(/\\s+/g,' ').slice(0,64);info.title=m.message||'';tr.appendChild(info);
+  const count=document.createElement('td');count.textContent=String(m.sent_recipients||0);tr.appendChild(count);
+  const actions=document.createElement('td');
+  actions.appendChild(mkbtn('Alicilari goster','gray',()=>showTemplateRecipients(m.id)));
+  actions.appendChild(mkbtn('Duzenle','gray',()=>editTemplate(m.id)));
+  actions.appendChild(mkbtn('Sil','red',()=>deleteTemplate(m.id)));
+  tr.appendChild(actions);body.appendChild(tr);
+ });
+ table.appendChild(body);root.appendChild(table);
+}
+function useSavedMessage(kind){
+ const id=document.getElementById(kind+'_saved').value;SELECTED_TEMPLATE[kind]=id;
+ const item=SAVED_MESSAGES.find(m=>m.id===id);
+ SELECTED_MESSAGE[kind]=item?item.message_id:'';
+ document.getElementById(kind==='csv'?'csv_message':'message').value=item?item.message:'';
+ IMG[kind]=item?(item.image||''):'';showPrev(kind,IMG[kind]?'/images/'+encodeURIComponent(IMG[kind]):'');
+}
+async function saveCurrentMessage(kind){
+ const text=document.getElementById(kind==='csv'?'csv_message':'message').value.trim();
+ if(!text){alert('Once mesaj metnini yaz.');return}
+ const name=prompt('Sablon adi:', 'Sablon '+new Date().toLocaleDateString());
+ if(name===null)return;
+ const r=await fetch('/api/templates',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name,message:text,image:IMG[kind]||''})});
+ const j=await r.json();if(!r.ok){alert(j.error||'Sablon kaydedilemedi.');return}
+ await loadSavedMessages();SELECTED_TEMPLATE[kind]=j.item.id;SELECTED_MESSAGE[kind]=j.item.message_id;
+ document.getElementById(kind+'_saved').value=j.item.id;
+ document.getElementById(kind==='csv'?'csv_message':'message').value=j.item.message;
+}
+let EDITING_TEMPLATE_ID='';
+let EDITING_TEMPLATE_IMAGE='';
+function newTemplate(){
+ EDITING_TEMPLATE_ID='';EDITING_TEMPLATE_IMAGE='';
+ document.getElementById('template_editor_title').textContent='Yeni sablon ekle';
+ document.getElementById('template_edit_name').value='';
+ document.getElementById('template_edit_message').value='';
+ document.getElementById('template_edit_error').textContent='';
+ document.getElementById('template_edit_image_file').value='';renderTemplateImagePreview();
+ document.getElementById('template_editor').showModal();
+}
+function editTemplate(id){
+ const item=SAVED_MESSAGES.find(m=>m.id===id);if(!item)return;
+ EDITING_TEMPLATE_ID=id;
+ EDITING_TEMPLATE_IMAGE=item.image||'';
+ document.getElementById('template_editor_title').textContent='Sablonu duzenle';
+ document.getElementById('template_edit_name').value=item.name||'';
+ document.getElementById('template_edit_message').value=item.message||'';
+ document.getElementById('template_edit_error').textContent='';
+ document.getElementById('template_edit_image_file').value='';renderTemplateImagePreview();
+ document.getElementById('template_editor').showModal();
+}
+function renderTemplateImagePreview(){
+ const box=document.getElementById('template_edit_image_preview');box.innerHTML='';
+ if(!EDITING_TEMPLATE_IMAGE)return;
+ const img=document.createElement('img');img.src='/images/'+encodeURIComponent(EDITING_TEMPLATE_IMAGE);img.style.cssText='max-width:220px;max-height:150px;display:block;margin:8px 0';box.appendChild(img);
+ box.appendChild(mkbtn('Resmi kaldir','gray',()=>{EDITING_TEMPLATE_IMAGE='';renderTemplateImagePreview()}));
+}
+async function uploadTemplateImage(input){
+ if(!input.files[0])return;
+ const fd=new FormData();fd.append('file',input.files[0],input.files[0].name||'resim.png');
+ const r=await fetch('/api/upload',{method:'POST',body:fd});const j=await r.json();
+ if(!r.ok){document.getElementById('template_edit_error').textContent=j.error||'Resim yuklenemedi.';input.value='';return}
+ EDITING_TEMPLATE_IMAGE=j.name;document.getElementById('template_edit_error').textContent='';renderTemplateImagePreview();input.value='';
+}
+document.getElementById('template_editor_form').addEventListener('submit',async e=>{
+ e.preventDefault();
+ const name=document.getElementById('template_edit_name').value.trim();
+ const message=document.getElementById('template_edit_message').value.trim();
+ const save=document.getElementById('template_edit_save'),error=document.getElementById('template_edit_error');
+ if(!name||!message){error.textContent='Şablon adı ve mesaj gerekli.';return}
+ save.disabled=true;error.textContent='';
+ try{
+  const creating=!EDITING_TEMPLATE_ID;
+  const r=await fetch(creating?'/api/templates':'/api/templates/'+EDITING_TEMPLATE_ID,{method:creating?'POST':'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name,message:message,image:EDITING_TEMPLATE_IMAGE})});
+  const j=await r.json();if(!r.ok){error.textContent=j.error||'Şablon güncellenemedi.';return}
+  if(creating){document.getElementById('template_editor').close();await loadSavedMessages();return}
+  const id=EDITING_TEMPLATE_ID;
+  for(const kind of ['csv'])if(SELECTED_TEMPLATE[kind]===id){SELECTED_MESSAGE[kind]=j.item.message_id;document.getElementById('csv_message').value=j.item.message;IMG[kind]=j.item.image||'';showPrev(kind,IMG[kind]?'/images/'+encodeURIComponent(IMG[kind]):'');}
+  document.getElementById('template_editor').close();EDITING_TEMPLATE_ID='';
+  await loadSavedMessages();
+ }catch(err){error.textContent='Kaydetme hatası: '+err.message}
+ finally{save.disabled=false}
+});
+async function deleteTemplate(id){
+ const item=SAVED_MESSAGES.find(m=>m.id===id);if(!item||!confirm('"'+item.name+'" sablonu silinsin mi? Gecmis kayitlari korunur.'))return;
+ const r=await fetch('/api/templates/'+id,{method:'DELETE'});const j=await r.json();
+ if(!r.ok){alert(j.error||'Sablon silinemedi.');return}
+ for(const kind of ['csv'])if(SELECTED_TEMPLATE[kind]===id){SELECTED_TEMPLATE[kind]='';SELECTED_MESSAGE[kind]='';document.getElementById(kind+'_saved').value='';}
+ await loadSavedMessages();
+}
+async function showTemplateRecipients(id){
+ const box=document.getElementById('template_recipients');box.style.display='block';box.textContent='Yukleniyor...';
+ const r=await fetch('/api/templates/'+id+'/recipients');const d=await r.json();
+ if(!r.ok){box.textContent=d.error||'Alicilar yuklenemedi.';return}
+ box.innerHTML='';const title=document.createElement('strong');title.textContent=d.name+' - gonderim gecmisi ('+d.items.length+')';box.appendChild(title);
+ box.appendChild(mkbtn('Kapat','gray',()=>{box.style.display='none';box.innerHTML=''}));
+ if(!d.items.length){const p=document.createElement('p');p.textContent='Bu sablonla henuz gonderim yapilmamis.';box.appendChild(p);return}
+ const table=document.createElement('table');table.style.marginTop='8px';
+ const hr=document.createElement('tr');['Tarih','Telefon','Isim','Sonuc','Gorev'].forEach(t=>{const th=document.createElement('th');th.textContent=t;hr.appendChild(th)});
+ const head=document.createElement('thead');head.appendChild(hr);table.appendChild(head);
+ const body=document.createElement('tbody');d.items.forEach(x=>{const tr=document.createElement('tr');
+  [String(x.sent_at||'').replace('T',' '),x.phone||'',x.name||'',({ok:'Gonderildi',belirsiz:'Belirsiz',hata:'Hata',gecersiz:'Gecersiz'}[x.result]||x.result||''),x.job_name||''].forEach(v=>{const td=document.createElement('td');td.textContent=v;tr.appendChild(td)});body.appendChild(tr);
+ });table.appendChild(body);const scroll=document.createElement('div');scroll.style.cssText='overflow:auto;max-height:320px';scroll.appendChild(table);box.appendChild(scroll);
+}
+for(const kind of ['csv']){
+ const field=document.getElementById('csv_message');
+ field.addEventListener('input',()=>{
+  const selected=SAVED_MESSAGES.find(m=>m.id===SELECTED_TEMPLATE[kind]);
+  if(selected&&field.value.trim()!==selected.message){SELECTED_TEMPLATE[kind]='';SELECTED_MESSAGE[kind]='';document.getElementById(kind+'_saved').value='';}
+ });
+}
+async function uploadImage(kind,file){
+ const prev=document.getElementById(kind+'_img_prev');
+ const fd=new FormData();fd.append('file',file,file.name||'resim.png');
+ const r=await fetch('/api/upload',{method:'POST',body:fd});
+ const j=await r.json();
+ if(!r.ok){IMG[kind]='';prev.textContent=j.error;prev.style.color='#dc2626';return}
+ IMG[kind]=j.name;showPrev(kind,j.url);
+}
+function showPrev(kind,url){
+ const prev=document.getElementById(kind+'_img_prev');prev.innerHTML='';prev.style.color='';
+ if(!url)return;
+ const img=document.createElement('img');img.src=url;
+ img.style.cssText='max-height:120px;max-width:100%;border-radius:6px;display:block;margin:6px 0';
+ prev.appendChild(img);
+ prev.appendChild(mkbtn('Resmi kaldir','red',()=>{IMG[kind]='';showPrev(kind,'')}));
+}
+function pickImage(kind,inp){if(inp.files[0])uploadImage(kind,inp.files[0]);inp.value=''}
+function hookPaste(id,kind){
+ document.getElementById(id).addEventListener('paste',e=>{
+  const items=(e.clipboardData&&e.clipboardData.items)||[];
+  for(const it of items){
+   if(it.type&&it.type.startsWith('image/')){e.preventDefault();uploadImage(kind,it.getAsFile());return}
+  }
+ });
+}
+let CSV_PREVIEW=[],CSV_SEND_PHONES=new Set(),CSV_PREVIEW_KEY='';
+function csvFileKey(file){return file?`${file.name}:${file.size}:${file.lastModified}`:''}
+function updateCsvPreviewCount(){
+ const count=document.getElementById('csv_preview_count');if(count)count.textContent=`${CSV_SEND_PHONES.size} / ${CSV_PREVIEW.length} kisi gonderilecek`;
+}
+function renderCsvPreview(skippedCount=0,optedOutCount=0){
+ const root=document.getElementById('csv_preview');root.innerHTML='';root.style.display='block';
+ const heading=document.createElement('div');heading.style.cssText='display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px';
+ const count=document.createElement('strong');count.id='csv_preview_count';heading.appendChild(count);
+ heading.appendChild(mkbtn('Tumunu sec','gray',()=>{CSV_SEND_PHONES=new Set(CSV_PREVIEW.filter(x=>!x.opt_out).map(x=>x.phone));renderCsvPreview(skippedCount,optedOutCount)}));
+ heading.appendChild(mkbtn('Tumunu atla','gray',()=>{CSV_SEND_PHONES.clear();renderCsvPreview(skippedCount,optedOutCount)}));
+ root.appendChild(heading);updateCsvPreviewCount();
+ if(skippedCount){const note=document.createElement('small');note.style.display='block';note.textContent=`CSV'de gecersiz veya dosya ici tekrar olan ${skippedCount} satir listelenmedi.`;root.appendChild(note)}
+ if(optedOutCount){const note=document.createElement('small');note.style.display='block';note.style.color='#dc2626';note.textContent=`Mesaj istemiyor olarak isaretli ${optedOutCount} kisi otomatik elendi.`;root.appendChild(note)}
+ if(!CSV_PREVIEW.length){const empty=document.createElement('p');empty.textContent='CSV icinde gecerli kisi bulunamadi.';root.appendChild(empty);return}
+ const scroll=document.createElement('div');scroll.style.cssText='max-height:260px;overflow:auto;border:1px solid #ddd;border-radius:6px;margin-top:6px';
+ const table=document.createElement('table'),head=document.createElement('thead'),hr=document.createElement('tr');
+ ['Gonder','Isim','Telefon','CSV satiri','Durum'].forEach(label=>{const th=document.createElement('th');th.textContent=label;hr.appendChild(th)});
+ head.appendChild(hr);table.appendChild(head);const body=document.createElement('tbody');
+ CSV_PREVIEW.forEach(person=>{
+  const tr=document.createElement('tr'),cell=document.createElement('td'),check=document.createElement('input');
+  check.type='checkbox';check.checked=CSV_SEND_PHONES.has(person.phone);check.disabled=!!person.opt_out;check.style.width='auto';check.setAttribute('aria-label',`${person.phone} numarasina gonder`);
+  check.addEventListener('change',()=>{if(check.checked)CSV_SEND_PHONES.add(person.phone);else CSV_SEND_PHONES.delete(person.phone);updateCsvPreviewCount()});
+  cell.appendChild(check);tr.appendChild(cell);
+  for(const value of [person.name||'',person.phone||'',String(person.row??''),person.opt_out?'Mesaj istemiyor':'']){const td=document.createElement('td');td.textContent=value;if(person.opt_out)td.style.color='#dc2626';tr.appendChild(td)}
+  body.appendChild(tr);
+ });
+ table.appendChild(body);scroll.appendChild(table);root.appendChild(scroll);
+}
+async function previewCsv(){
+ const file=document.getElementById('csv_file').files[0],root=document.getElementById('csv_preview');
+ CSV_PREVIEW=[];CSV_SEND_PHONES.clear();CSV_PREVIEW_KEY='';
+ if(!file){root.style.display='none';root.innerHTML='';return}
+ root.style.display='block';root.textContent='CSV kisileri okunuyor...';
+ const fd=new FormData();fd.append('file',file);
+ try{
+  const response=await fetch('/api/csv/preview',{method:'POST',body:fd}),data=await response.json();
+  if(!response.ok){root.textContent=data.error||'CSV okunamadi.';return}
+  CSV_PREVIEW=data.items||[];CSV_SEND_PHONES=new Set(CSV_PREVIEW.filter(x=>!x.opt_out).map(x=>x.phone));CSV_PREVIEW_KEY=csvFileKey(file);
+  renderCsvPreview(data.skipped_count||0,data.opted_out_count||0);
+ }catch(error){root.textContent='CSV onizleme hatasi: '+error.message}
+}
+async function addCsv(){
+ const msg=document.getElementById('csv_msg');
+ const f=document.getElementById('csv_file').files[0];
+ if(!f){msg.style.color='#dc2626';msg.textContent='Once bir CSV dosyasi sec.';return}
+ if(CSV_PREVIEW_KEY!==csvFileKey(f)){msg.style.color='#dc2626';msg.textContent='CSV onizlemesinin tamamlanmasini bekle.';return}
+ if(!CSV_SEND_PHONES.size){msg.style.color='#dc2626';msg.textContent='Gonderilecek en az bir kisi sec.';return}
+ const fd=new FormData();
+ fd.append('file',f);
+ fd.append('name',document.getElementById('csv_name').value);
+ fd.append('message',document.getElementById('csv_message').value);
+  fd.append('message_id',SELECTED_MESSAGE.csv);
+ fd.append('template_id',SELECTED_TEMPLATE.csv);
+ fd.append('image',IMG.csv);
+ fd.append('send_phones',JSON.stringify([...CSV_SEND_PHONES]));
+ fd.append('daily_limit',document.getElementById('csv_limit').value);
+ fd.append('win_start',document.getElementById('csv_ws').value);
+ fd.append('win_end',document.getElementById('csv_we').value);
+ fd.append('start',document.getElementById('csv_start').value);
+ fd.append('spread',document.getElementById('csv_spread').checked?'true':'false');
+ fd.append('min_delay',document.getElementById('csv_min').value);
+ fd.append('max_delay',document.getElementById('csv_max').value);
+ const r=await fetch('/api/jobs/csv',{method:'POST',body:fd});
+ const j=await r.json();
+ msg.style.color=r.ok?'#16a34a':'#dc2626';
+ msg.textContent=j.error||j.info||'';
+  if(r.ok){document.getElementById('csv_file').value='';document.getElementById('csv_preview').style.display='none';document.getElementById('csv_preview').innerHTML='';CSV_PREVIEW=[];CSV_SEND_PHONES.clear();CSV_PREVIEW_KEY='';document.getElementById('csv_message').value='';document.getElementById('csv_saved').value='';SELECTED_MESSAGE.csv='';SELECTED_TEMPLATE.csv='';document.getElementById('csv_name').value='';IMG.csv='';showPrev('csv','');loadSavedMessages();load()}
+}
+hookPaste('csv_message','csv');
+loadSavedMessages();
+let initialTab='dashboard';try{initialTab=localStorage.getItem('wa_active_tab')||initialTab}catch(e){}
+switchTab(initialTab);setInterval(()=>{if(activeTab==='dashboard')load();else loadStatus()},4000);setInterval(()=>{if(activeTab==='dashboard')loadDashboardSummary()},15000);setInterval(tickCountdowns,1000);
+</script></body></html>

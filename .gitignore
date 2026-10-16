@@ -12,6 +12,7 @@ sent_history.sqlite3*
 *.sqlite
 *.sqlite3
 *.db
+wa_panel.lock
 
 # Queued jobs, checkpoints and local backups
 jobs.json

@@ -2,17 +2,39 @@
 
 Bu belge CSV ile WhatsApp gonderim listelerinin mevcut durumunu, yarim kalan islerin nasil ele alinacagini ve gelistirme adimlarini takip eder.
 
+## Uretim Hazirligi
+
+- [x] Flask gelistirme sunucusunu Windows destekli Waitress WSGI sunucusuna gecir; paneli yalnizca `127.0.0.1` uzerinde sun.
+- [x] Ayni WhatsApp Chromium profili ve veritabaniyla iki uygulama surecinin ayni anda acilmasini engelle.
+- [x] Dosya/istek boyutunu sinirla ve tarayicidan gelen degisiklik isteklerinde farkli kaynaklari reddet.
+- [x] SQLite WAL modunu ve sik kullanilan gonderim gecmisi sorgulari icin indeksleri etkinlestir.
+- [x] Log tablo semasini her olayda tekrar olusturma; uygulama log ekranini gorunmeyen sekmelerde sorgulama ve gorunen kayit sayisini azalt.
+- [x] Gecmis CSV gecisi sirasinda alici kaydini her satirda yeniden taramak yerine telefon esleme haritasi kullan.
+- [x] Buyuk log ve gonderim gecmisi disa aktarmalarini bellekte tum sonucu biriktirmeden parca parca yaz.
+- [ ] Modulleri arayuz, API, gonderim motoru ve kalici depolama olarak ayir; API veri modellerine tip/alan dogrulamasi ekle.
+- [x] Panelin HTML/CSS/JavaScript arayuzunu `templates/index.html` dosyasina tasi; `wa_panel.py` arayuz metni yerine bu sablon dosyasini yuklesin.
+- [x] Move phone normalization and CSV/Google Contacts parsing to `csv_import.py`; keep the existing message fingerprint callback.
+- [ ] Yedekleme ve geri yukleme akisini kullaniciya sun; veritabani ve WhatsApp oturum dosyalarinin kurtarma adimlarini belge.
+- [ ] Otomatik test ve uygulama paketleme/kurulum sureci ekle; temiz Windows ortamina kurulum ve gonderim akisini dogrula.
+
 ## Mevcut Durum
 
 - [x] CSV secilince gecerli kayitlar onizlemede listelenir; her kisi icin gonderme secimi vardir.
 - [x] Gonderim secilmeyen kisiler gorevde atlananlar olarak tutulur ve indirilebilir.
 - [x] Ayni telefon ve ayni sablon/mesaj daha once gonderilmisse normal gonderimde filtrelenir.
-- [x] CSV formunda acikca secilirse onceki gonderim filtresi asilir. Bu secim yeni bir gonderim kimligi olusturur; ayni liste icindeki tekrarlar ve yarim kalan gorevin tekrari yine engellenir.
+- [x] Ayni kisiye ayni mesaj ID'si ikinci kez gonderilmez; eski surumde tekrar gondermek icin olusturulmus alternatif kimlikler de asil mesaj ID'sine tasinir.
 - [x] Gonderim gorevleri `jobs.json` dosyasina kaydedilir. Uygulama yeniden acilinca calismakta olan gorev bekliyor durumuna alinir ve kalan alicilardan surer.
 - [x] Gonderim denemesi sonucundan once kalici gonderim gecmisine yazilir. Sonucu belirsiz denemeler otomatik olarak tekrar gonderilmez.
 - [x] Liste detayinda gonderildi, bekliyor, hata, gecersiz numara, daha once gonderilmis ve atlanan kisiler ayri gorulur.
 - [x] Hatalilar tekrar siraya alinabilir; numara duzenlenebilir veya kayit silinebilir. Sorunlu ve atlanan kayitlar CSV olarak indirilebilir.
 - [x] Ek CSV yukleyerek mevcut goreve yeni kisiler eklenir; ayni kisi ve mesaj tekrar eklenmez.
+- [x] Kesin basarili gonderim alan telefonlar merkezi kisi tablosuna yazilir; eski basarili gonderim gecmisi ilk acilista bu tabloya aktarilir.
+- [x] Kisi ile gonderilen mesajlarin `message_id` iliskisi ve ayrintilari gonderim gecmisinde korunur; ayni kisiye ayni mesaj tekrar eklenmez.
+- [x] Kisi "mesaj almak istemiyor" olarak isaretlenebilir veya telefon numarasi dogrudan engelleme listesine eklenebilir; bu engel CSV seciminden ve sirada bekleyen gonderimlerden once uygulanir.
+- [x] CSV onizlemesi engellenen kisileri gosterir ve secilemez yapar; gonderim filtresi ayni mesaj ID'sini daha once almis kisileri de goreve eklemez.
+- [x] Kisi panelinde arama, izin durumu yonetimi, kisi basina mesaj ID/gonderim gecmisi ve tum kisi listesini CSV disa aktarma bulunur.
+- [x] Arayuz Ana Panel, Mesaj Gonder, Sablonlar ve Kisiler sekmelerine ayrildi; sekme secimi yenileme sonrasinda korunur.
+- [x] Ana Panelde toplam kayitli kisi sayisi ve son 14 gun icin gunluk basarili mesaj alan benzersiz kisi sayisi bar grafigi gosterilir.
 
 ## Yapilacaklar
 
@@ -34,7 +56,8 @@ Bu belge CSV ile WhatsApp gonderim listelerinin mevcut durumunu, yarim kalan isl
 ### P1 - Basarisiz ve belirsiz gonderimleri yonetme
 
 - [x] WhatsApp'in sohbet acilirken gosterdigi gecici "Starting chat / Cancel" penceresini gonderim hatasi sayma; sohbet mesaj kutusu hazir olana kadar bekle.
-- [ ] Gecici hata, kalici/gecersiz numara ve sonucu belirsiz gonderimi arayuzde farkli aciklamalarla goster.
+- [x] WhatsApp'in "isn't on WhatsApp" uyarisini gecersiz numara olarak siniflandir; otomatik tekrar etme, eski hata kayitlarini da gecersize cevir ve gecersiz numaraya tekrar dene dugmesi gosterme.
+- [x] Gecici sohbet hatasinda ilk otomatik tekrar denemesini 20 saniye sonra planla; normal gonderim bekleme araligini degistirme.
 - [ ] Tekrar dene islemi sadece secilen hata kayitlarini yeniden siraya alsin; belirsiz sonuc icin kullanicidan ayri onay istesin.
 - [ ] Tekrar deneme sayisini, son hata mesajini ve her deneme zamanini alici gecmisinde sakla.
 - [ ] Kabul kosulu: tekrar deneme, zaten gonderilmis kaydi atlar; kullanici hangi kaydin neden tekrar denendigini gorebilir.
@@ -55,10 +78,19 @@ Bu belge CSV ile WhatsApp gonderim listelerinin mevcut durumunu, yarim kalan isl
 - [ ] Gorev silme islemi ile gonderim gecmisini silme islemini ayri tut; gecmis varsayilan olarak korunmali.
 - [ ] Kabul kosulu: kullanici bir listenin nereden geldigini, hangi kisilerin eklendigini/atlandigini ve sonuc raporunu sonradan bulabilir.
 
+### P1 - Kisi kaydi, mesaj tekrari ve izinleri
+
+- [x] Yalnizca kesin basarili gonderimler kisi kaydina eklenir; onceki basarili gonderimler veritabani gecisiyle korunur.
+- [x] Telefon numarasi kisi kaydinda tekildir; her gonderim `send_history` uzerinden mesaj ID'si, zaman, gorev ve sonucuyla bu numaraya baglanir.
+- [x] Mesaj ID'si bazli tekrar filtresi gelen CSV kayitlarini eler; kisi izin vermiyorsa mesaj ID'sinden bagimsiz olarak tum mesajlar engellenir.
+- [x] Kullanici kisi kaydinda mesaj iznini kaldirabilir/geri verebilir; izin listesi aranabilir, mesaj gecmisi incelenebilir ve CSV olarak indirilebilir.
+- [x] Kabul kosulu: engelli kisi CSV onizlemesinde gonderime secilemez ve gorev onceden olusturulmussa dahi gonderim adiminda atlanir.
+
 ### P2 - Gonderim loglarini analiz etme
 
 - [x] Uygulama ve gonderim olaylarini SQLite veritabaninda kalici sakla; loglari panelde ara ve CSV olarak indir.
 - [x] Gonderim loglarina olay seviyesi, gorev kimligi ve telefon bilgisini ekle.
+- [x] Uygulama loglarini ana panelde gorev listesinin hemen altina ve gonderim gecmisinin ustune tasi; WhatsApp baglantisi, alici/izin/tekrar kontrolleri, sohbet acma, icerik hazirlama, gonderme, sonuc dogrulama, bekleme ve hata adimlarini logla.
 
 ## Uygulama Sirasi
 
@@ -71,6 +103,7 @@ Bu belge CSV ile WhatsApp gonderim listelerinin mevcut durumunu, yarim kalan isl
 ## Is Kurallari
 
 - Bir telefon + sablon kimligi, sablon duzenlense bile ayni kampanya sayilir; onceki gonderim varsayilan olarak tekrar edilmez.
-- "Onceki gonderim filtresini atla" yalnizca kullanici acikca sectiginde uygulanir ve yeni bir gonderim denemesi olarak kaydedilir.
+- Ayni kisi + ayni mesaj ID'si kontrolu tekrar gonderim secenegiyle atlanamaz.
 - Sonucu belirsiz gonderim, kullanici karari veya guvenilir WhatsApp dogrulamasi olmadan otomatik tekrar edilmez.
+- Mesaj istememe kaydi, gonderim gecmisi veya kullanicinin tekrar gonderim seceneginden bagimsiz olarak her zaman onceliklidir.
 - CSV'deki gonderim secimi, gorev kaydina kopyalanir; sonradan CSV dosyasinin degismesi olusturulmus gorevi degistirmez.
