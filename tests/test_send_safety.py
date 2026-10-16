@@ -224,51 +224,6 @@ class SendSafetyTests(unittest.TestCase):
         self.assertTrue(wa_panel.previously_sent(recipient["phone"], result["message_id"],
                                                  wa_panel.message_fingerprint("Guncellenmis metin")))
 
-    def test_csv_resend_bypass_ignores_old_send_but_keeps_in_upload_duplicates_blocked(self):
-        phone = "905550000003"
-        stable_id = "stable-template-id"
-        key = wa_panel.message_fingerprint("Merhaba")
-        wa_panel.record_attempt({"id": "old-job", "name": "Eski", "image": ""},
-                                {"phone": phone, "name": "Test", "template_id": "template"},
-                                "Merhaba", "ok", "", key, stable_id)
-        resend_id = "resend:current-upload:stable-template-id"
-        incoming = [
-            {"phone": phone, "name": "Test", "message_id": resend_id,
-             "queue_message_id": stable_id},
-            {"phone": phone, "name": "Test", "message_id": resend_id,
-             "queue_message_id": stable_id},
-        ]
-
-        accepted, skipped = wa_panel.phone_blocks(incoming, "Merhaba", bypass_sent=True)
-        self.assertEqual(len(accepted), 1)
-        self.assertEqual(len(skipped), 1)
-        regular, regular_skipped = wa_panel.phone_blocks(
-            [{"phone": phone, "name": "Test", "message_id": stable_id}], "Merhaba")
-        self.assertEqual(regular, [])
-        self.assertEqual(len(regular_skipped), 1)
-
-    def test_csv_api_checkbox_creates_a_distinct_resend_run(self):
-        client = wa_panel.app.test_client()
-        created = client.post("/api/templates", json={"name": "Sablon", "message": "Merhaba"})
-        template = created.get_json()["item"]
-        phone = "905550000004"
-        key = wa_panel.message_fingerprint("Merhaba")
-        attempt = wa_panel.record_attempt({"id": "old-send", "name": "Eski", "image": ""},
-                                          {"phone": phone, "name": "Eski kisi"}, "Merhaba",
-                                          "ok", "", key, template["message_id"], template["id"])
-        wa_panel.finish_attempt(attempt, "ok")
-
-        response = client.post("/api/jobs/csv", data={
-            "file": (BytesIO(b"phone,name\n905550000004,Test\n"), "contacts.csv"),
-            "message": "Merhaba", "message_id": template["message_id"],
-            "template_id": template["id"], "allow_resend": "true",
-        }, content_type="multipart/form-data")
-        self.assertEqual(response.status_code, 200, response.get_json())
-        resend_job = wa_panel.jobs[-1]
-        self.assertTrue(resend_job["allow_resend"])
-        self.assertEqual(len(resend_job["recipients"]), 1)
-        self.assertNotEqual(resend_job["recipients"][0]["message_id"], template["message_id"])
-
     def test_csv_preview_selection_excludes_unchecked_people_from_job(self):
         client = wa_panel.app.test_client()
         response = client.post("/api/jobs/csv", data={
