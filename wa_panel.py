@@ -1,5 +1,5 @@
 """
-WhatsApp Web Kontrol Paneli (Flask + Playwright)
+WhatsAppTransporter - WhatsApp Web gonderim uygulamasi (Flask + Playwright)
 
 Kurulum:
     baslat.bat gerekli paketleri ve Chromium'u ilk calistirmada kurar.
@@ -1861,7 +1861,7 @@ def api_delete(job_id):
 HTML = """<!doctype html>
 <html lang="tr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>WhatsApp Panel</title>
+<title>WhatsAppTransporter</title>
  <style>
  :root{font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;color:#172033;background:#f4f6fb;font-synthesis:none}
  *{box-sizing:border-box}
@@ -1914,7 +1914,7 @@ HTML = """<!doctype html>
  .history-main[aria-expanded="true"] td{background:#eef4ff}
  @media(max-width:760px){.wrap{padding:14px 12px 36px}.topbar{align-items:flex-start;flex-direction:column;padding:19px}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.card{padding:15px;overflow-x:auto}.topbar h1{font-size:22px}}
 </style></head><body><div class="wrap">
-<header class="topbar"><div><h1>WhatsApp Panel</h1><p>Mesaj kampanyalarini, listeleri ve gonderim sonuclarini yonet</p></div><span id="status" class="st">...</span></header>
+<header class="topbar"><div><h1>WhatsAppTransporter</h1><p>Mesaj kampanyalarini, listeleri ve gonderim sonuclarini yonet</p></div><span id="status" class="st">...</span></header>
 <section class="stats" aria-label="Genel durum">
  <div class="stat"><span class="stat-label">Aktif liste</span><strong class="stat-value" id="stat_jobs">0</strong></div>
  <div class="stat"><span class="stat-label">Toplam alici</span><strong class="stat-value" id="stat_recipients">0</strong></div>

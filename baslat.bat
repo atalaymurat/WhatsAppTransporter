@@ -1,5 +1,6 @@
 @echo off
 setlocal
+title WhatsAppTransporter
 cd /d "%~dp0"
 
 set "VENV_PY=%~dp0.venv\Scripts\python.exe"
